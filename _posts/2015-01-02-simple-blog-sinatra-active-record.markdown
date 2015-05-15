@@ -2,7 +2,7 @@
 layout: post
 title:  "A Simple Blog with Sinatra and Active Record ( + some useful tools)"
 date:   2015-01-02 10:31:11
-categories: sinatra active-record
+categories: sinatra
 ---
 
 ## Objective

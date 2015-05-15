@@ -2,12 +2,10 @@
 layout: post
 title:  "Generating and submitting a sitemap.xml with Rails"
 date:   2015-05-15 10:10:11
-categories: rails sitemap
+categories: rails
 ---
 
 
-
-You can see this blog's sitemap at [danneu.com/sitemap.xml](http://danneu.com/sitemap.xml). Any time a post is created, it updates the sitemap.
 
 Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)
 
