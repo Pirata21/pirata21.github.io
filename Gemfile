@@ -1,5 +1,9 @@
 source 'https://rubygems.org'
-
+ruby '2.1.0'
+gem 'kramdown'
+gem 'rack-jekyll'
+gem 'rake'
+gem 'puma'
 gem 'jekyll'
 gem 'jekyll-sitemap'
 gem 'octopress', '~> 3.0.0.rc.12'
