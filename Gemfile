@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
-ruby '2.1.0'
-#ruby '2.1.4'
+#ruby '2.1.0'
+ruby '2.1.4'
 gem 'kramdown'
 gem 'rack-jekyll'
 gem 'rake'
