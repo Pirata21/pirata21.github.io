@@ -4,7 +4,7 @@ title: "Generating and submitting a sitemap.xml with Rails"
 excerpt: "Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)"
 categories: articles
 tags: [sample-post, readability, test]
-author: billy_rick
+author: pirata21
 comments: true
 share: true
 image:
