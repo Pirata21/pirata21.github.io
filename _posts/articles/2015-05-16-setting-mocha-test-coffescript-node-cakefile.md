@@ -8,7 +8,7 @@ author: pirata21
 comments: true
 share: true
 image:
-  feature: so-simple-sample-image-7.jpg
+  feature: so-simple-sample-image-7.png
   credit: WeGraphics
   creditlink: http://wegraphics.net/downloads/free-ultimate-blurred-background-pack/
 ---
