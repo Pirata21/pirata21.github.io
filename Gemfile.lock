@@ -80,6 +80,8 @@ GEM
     rouge (1.9.0)
     safe_yaml (1.0.4)
     sass (3.4.14)
+    sinatra (1.0)
+      rack (>= 1.0)
     timers (4.0.1)
       hitimes
     titlecase (0.1.1)
@@ -99,3 +101,4 @@ DEPENDENCIES
   rack-jekyll
   rake
   rouge
+  sinatra (= 1.0)
