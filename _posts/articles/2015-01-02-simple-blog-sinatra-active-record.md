@@ -3,7 +3,7 @@ layout: post
 title: "A Simple Blog with Sinatra and Active Record ( + some useful tools)"
 excerpt: "Sinatra is often suggested to newbies as an easy framework, but I imagine its lack of post-readme documentation makes it pretty daunting once you get past &quot;Hello World&quot;. Doing something like hooking up a database is non-obvious, and writing glue code just isn&#39;t newbie friendly."
 categories: articles
-tags: [sample-post, readability, test]
+tags: [sinatra, active record, tux, shotgun ]
 author: pirata21
 comments: true
 share: true

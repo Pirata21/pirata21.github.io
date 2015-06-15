@@ -3,7 +3,7 @@ layout: post
 title: "Setting up Mocha testing with Coffeescript, Node.js, and a Cakefile"
 excerpt: "I'm still in a Javascript (well, Coffeescript) kick. In an attempt to be productive while I train with great discipline, I decided to port Paul Dix's "
 categories: articles
-tags: [sample-post, readability, test]
+tags: [coffescript, mocha, cakefile]
 author: pirata21
 comments: true
 share: true
