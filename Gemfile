@@ -3,8 +3,8 @@ ruby '2.1.0'
 #ruby '2.1.4'
 gem 'kramdown'
 gem 'rack-jekyll'
-gem 'rake'
-gem 'puma'
+gem "rake", ">= 12.3.3"
+gem "puma", ">= 3.12.4"
 gem 'jekyll'
 gem 'jekyll-sitemap'
 gem 'octopress', '~> 3.0.0.rc.12'
