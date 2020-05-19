@@ -1,0 +1,96 @@
+I"�<p>I’m still in a Javascript (well, Coffeescript) kick. In an attempt to be productive while I train with great discipline, I decided to port Paul Dix’s <a href="https://github.com/pauldix/domainatrix">Domainatrix</a> Ruby gem into a Node module.</p>
+
+<p>I really like the syntax and polish of the <a href="http://visionmedia.github.com/mocha/">Mocha</a> test framework. It spoke to me. I also use the <a href="http://chaijs.com/">Chai</a> assertion module.</p>
+
+<h2 id="objectives">Objectives</h2>
+
+<ul>
+  <li>Run all tests with <code>cake test</code></li>
+  <li>A <code>test_helper.coffee</code> file loaded before my tests to DRY them up</li>
+  <li>Hook in to the convetion of also making <code>npm test</code> run my tests</li>
+</ul>
+
+<h2 id="directory-structure">Directory structure</h2>
+
+<pre><code>    /
+    |-- lib  
+    |    +-- (Compiled Javascript)
+    |-- src  
+    |    +-- (Coffeescript)
+    |-- test
+    |    |-- test_helper.coffee
+    |    +-- (Other tests)
+    |-- package.json
+    |-- Cakefile
+</code></pre>
+
+<p>Mocha expects a <code>test/</code> directory. When you run mocha, it runs all the tests found there.</p>
+
+<h2 id="the-cakefile">The Cakefile</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># Cakefile</span>
+
+    <span class="p">{</span><span class="nb">exec</span><span class="p">}</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">"child_process"</span>
+
+    <span class="no">REPORTER</span> <span class="o">=</span> <span class="s2">"min"</span>
+
+    <span class="n">task</span> <span class="s2">"test"</span><span class="p">,</span> <span class="s2">"run tests"</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nb">exec</span> <span class="s2">"NODE_ENV=test 
+        ./node_modules/.bin/mocha 
+        --compilers coffee:coffee-script
+        --reporter </span><span class="si">#{</span><span class="no">REPORTER</span><span class="si">}</span><span class="s2">
+        --require coffee-script 
+        --require test/test_helper.coffee
+        --colors
+      "</span><span class="p">,</span> <span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="kp">throw</span> <span class="n">err</span> <span class="k">if</span> <span class="n">err</span>
+        <span class="n">console</span><span class="p">.</span><span class="nf">log</span> <span class="n">output</span></code></pre></figure>
+
+<p>The breakdown:</p>
+
+<ul>
+  <li><code>NODE_ENV=test</code> forces the test environment. Among other things, it lets us reset assured that tests will use the test database (which will be trashed)</li>
+  <li><code>--compilers coffee:coffeescript</code> lets Mocha know it’ll be compiling and running .coffee tests</li>
+  <li><code>--reports #{REPORTER}</code> sets the test output mode. I like “min” because it clears the screen between tests</li>
+  <li><code>--require coffee-script</code> lets us write our test_helper with Coffeescript</li>
+  <li><code>--require test/test_helper.coffee</code> loads our test_helper before our tests are run</li>
+  <li><code>--colors</code> forces output colors since Mocha disables them when it doesn’t think it’s printing to a terminal</li>
+</ul>
+
+<p>I tried to add a <code>test-w</code> test that would include Mocha’s <code>--watch</code> and <code>--growl</code> options, but I couldn’t get the watcher to actually work.</p>
+
+<h2 id="the-test-helper">The Test Helper</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># test/test_helper.coffee</span>
+
+    <span class="n">global</span><span class="p">.</span><span class="nf">assert</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"chai"</span><span class="p">).</span><span class="nf">assert</span></code></pre></figure>
+
+<p>Rather than having to declare <code>assert = require("chai").assert</code> in every test, I attach the assert function to the global variable that persists across my tests.</p>
+
+<h2 id="packagejson">package.json</h2>
+
+<p>Nodejitsu has a helpful <a href="http://package.json.nodejitsu.com/">package.json cheatsheet</a>.</p>
+
+<figure class="highlight"><pre><code class="language-json" data-lang="json"><span class="w">    </span><span class="p">{</span><span class="w">
+      </span><span class="err">...</span><span class="w">
+      </span><span class="nl">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"test"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cake test"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"devDependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"chai"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.3"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"mocha"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.1.0"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="err">...</span><span class="w">
+    </span><span class="p">}</span></code></pre></figure>
+
+<p>Note: <code>npm install --save chai mocha</code> will automatically add them to the dependencies hash along with their version number. From there you can move them into devDependencies.</p>
+
+<p>The <code>scripts</code> hash tells Node what commands to run. For example, now <code>npm test</code> simply calls our Cakefile task. It seems to be the convention along with creating an <code>npm server</code> command. Basically, developers that clone/install your project shouldn’t have to hunt for the magical command that happens to run your test suite and start your server.</p>
+
+<p>But <code>npm test</code> adds Node’s error output after your test output so I don’t use it.</p>
+
+<h2 id="thats-it">That’s it</h2>
+
+<p>I hope to get Mocha’s watcher working soon so I don’t have to manually run my tests. I’ll update this post if I figure it out.</p>
+
+:ET

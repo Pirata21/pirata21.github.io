@@ -1,0 +1,493 @@
+I"��<h2 id="objective">Objective</h2>
+
+<p>Sinatra is often suggested to newbies as an easy framework, but I imagine its lack of post-readme documentation makes it pretty daunting once you get past "Hello World". Doing something like hooking up a database is non-obvious, and writing glue code just isn't newbie friendly.</p>
+
+<p>This tutorial is extracted from a comprehensive 8,000 word tutorial I wrote last weekend that explains why I'm actually doing the things that I'm doing, but it's way too aimless, verbose, and meandering. Here's a more easily digested quickstart guide</p>
+
+<h2 id="what-well-be-building">What we'll be building</h2>
+
+<p>We'll be making a blog. It won't be pretty, but it'll include these features:</p>
+
+<ul>
+  <li>Migrations: the ability to apply and rollback changes to our database (like creating our table of posts).</li>
+  <li>Show all of our posts on our homepage</li>
+  <li>Individual pages for each blog post</li>
+  <li>Appropriate forms and buttons to create/update/destroy our blog posts</li>
+  <li>Helper methods that let us simplify our templates.</li>
+  <li>A place to put our static pages like “About Me”.</li>
+  <li>A RESTful interface.</li>
+  <li>Layouts, partial templates, and regular templates.</li>
+  <li>MVC pattern</li>
+  <li>Validations on our posts</li>
+</ul>
+
+<p><img src="/images/6p.png" alt="Alt text" /></p>
+
+<h2 id="what-our-file-hierarchy-will-look-like">What our file hierarchy will look like</h2>
+
+<p>Some of these files/directories will be automatically generated.</p>
+
+<pre><code>+-- blog
+	+-- Gemfile                       # Lists our gem dependencies
+	+-- Rakefile                      # Contains helpful tasks we can run from command line
+	+-- config.ru                     # A conventional file used for deploying and integrating with some tools
+	+-- app.rb                        # The guts of our Sinatra app
+	+-- blog.db                       # Our SQLite3 database
+	+-- views/                        # Contains our templates
+		+-- layout.erb                # HTML that's displayed on every page and embeds the other templates
+		+-- _delete_post_button.erb   # A partial template to extract some ugly HTML from our view
+		+-- pages/              
+			+-- about.erb
+		+-- posts/
+			+-- index.erb
+			+-- show.erb
+			+-- new.erb
+			+-- edit.erb
+</code></pre>
+
+<h2 id="the-gems-well-use">The gems we’ll use</h2>
+
+<ul>
+  <li>sinatra: the framework</li>
+  <li>sqlite3: the database</li>
+  <li>activerecord: the interface to our database</li>
+  <li>sinatra-activerecord: a bridge that lets us use Active Record</li>
+  <li>shotgun: a development server that reloads our app code on each request so we don’t need to restart the server to see our changes.</li>
+  <li>tux: a console that lets us run Ruby code in the environment of our app/database.</li>
+</ul>
+
+<h2 id="gemfile">Gemfile</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">source</span> <span class="ss">:rubygems</span>
+
+<span class="n">gem</span> <span class="s2">"sinatra"</span>
+<span class="n">gem</span> <span class="s2">"sqlite3"</span>
+<span class="n">gem</span> <span class="s2">"activerecord"</span>
+<span class="n">gem</span> <span class="s2">"sinatra-activerecord"</span>
+
+<span class="n">group</span> <span class="ss">:development</span> <span class="k">do</span>
+  <span class="n">gem</span> <span class="s2">"shotgun"</span>
+  <span class="n">gem</span> <span class="s2">"tux"</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Install and lock ‘em:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>bundle <span class="nb">install</span></code></pre></figure>
+
+<h2 id="our-configru">Our config.ru</h2>
+
+<p>Including a config.ru file is a convention that some deployment procedures and tools (like shotgun, tux, and Heroku) look for. It just includes the code of our app and tells a handler what to run.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># config.ru </span>
+<span class="nb">require</span> <span class="s2">"./app"</span>
+<span class="n">run</span> <span class="no">Sinatra</span><span class="o">::</span><span class="no">Application</span></code></pre></figure>
+
+<h2 id="booting-up-the-server-and-our-console">Booting up the server and our console</h2>
+
+<p>In one terminal, start the server:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>shotgun</code></pre></figure>
+
+<p>In another, start our console:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>tux</code></pre></figure>
+
+<h2 id="setting-up-the-database-and-our-post-model">Setting up the database and our Post model</h2>
+
+<p>Our database will be written to blog.db in the root of our app’s directory.</p>
+
+<p>Our Post model, while empty, is all Active Record needs to see to know to expose us methods that will operate on an underlying table called “posts”.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1">#  app.rb</span>
+<span class="nb">require</span> <span class="s2">"sinatra"</span>
+<span class="nb">require</span> <span class="s2">"sinatra/activerecord"</span>
+
+<span class="n">set</span> <span class="ss">:database</span><span class="p">,</span> <span class="s2">"sqlite3:///blog.db"</span>
+
+<span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Type Post.all into the tux console and it’ll let you know that no posts table exists yet:</p>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>tux
+<span class="o">&gt;&gt;</span> Post.all
+ActiveRecord::StatementInvalid: Could not find table <span class="s1">'posts'</span></code></pre></figure>
+
+<p>Including some rake rasks</p>
+
+<p>Rake tasks are helpful commands we can run from our command line. The sinatra-activerecord gem comes with some. Let’s include them in our Rake file:</p>
+
+<h2 id="rakefile">Rakefile</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s2">"./app"</span>
+<span class="nb">require</span> <span class="s2">"sinatra/activerecord/rake"</span></code></pre></figure>
+
+<p>You can get a list of available rake tasks by running $ rake -T:</p>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh">rake db:create_migration <span class="nv">NAME</span><span class="o">=</span>name_of_migration: creates a new migration file <span class="k">in </span>db/migrate/.
+rake db:migrate: apply all migrations to the database that have no been applied.
+rake db:rollback: undo the previous migration
+Writing our first migration</code></pre></figure>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>rake db:create_migration <span class="nv">NAME</span><span class="o">=</span>create_posts</code></pre></figure>
+
+<p>This will generate the directory structure and file: db/migrate/201210231234_create_posts.rb. That timestamp is how Active Record knows the order in which migrations should be applied to the database.</p>
+
+<p>Let’s open it up and write what happens to the database when this migration is applied.</p>
+
+<p>Note: Active Record’s API is outside the scope of this tutorial. In fact, it’s one of the learning curves of Ruby on Rails. Fortunately, the Ruby Guide on Active Record talks about the same gem, so check it out: Active Record Query Interface.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">CreatePosts</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+  <span class="k">def</span> <span class="nf">up</span>
+    <span class="n">create_table</span> <span class="ss">:posts</span> <span class="k">do</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
+      <span class="n">t</span><span class="p">.</span><span class="nf">string</span> <span class="ss">:title</span>
+      <span class="n">t</span><span class="p">.</span><span class="nf">text</span> <span class="ss">:body</span>
+      <span class="n">t</span><span class="p">.</span><span class="nf">timestamps</span>
+    <span class="k">end</span>
+    <span class="no">Post</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="ss">title: </span><span class="s2">"My first post"</span><span class="p">,</span> <span class="ss">body: </span><span class="s2">"And this is the post's content."</span><span class="p">)</span>
+    <span class="no">Post</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="ss">title: </span><span class="s2">"How to lasso your dog"</span><span class="p">,</span> 
+                <span class="ss">body: </span><span class="s2">"1. Tie a rope into a lasso. 2. Swing it over that unruly dog's torso. 3. Gently pull."</span><span class="p">)</span>
+    <span class="no">Post</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="ss">title: </span><span class="s2">"Top 10 coffee shops in Austin"</span><span class="p">,</span> <span class="ss">body: </span><span class="s2">"1..10: Epoch Coffee, the 24/7 coffee shop."</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">down</span>
+    <span class="n">drop_table</span> <span class="ss">:posts</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>That gives our posts these columns:</p>
+
+<p>id (maintained by Active Record)
+title
+body
+created_at (maintained by Active Record)
+updated_at (maintained by Active Record)
+I also included three sample posts.</p>
+
+<p>The up method is run when migrating, the down method is run when rolling back the migration.</p>
+
+<p>Run the migration</p>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>rake db:migrate</code></pre></figure>
+
+<p>It should indicate that the posts table was created.</p>
+
+<p>Verify in tux</p>
+
+<p>In the tux console:</p>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>tux
+<span class="o">&gt;&gt;</span> Post.count
+3
+<span class="o">&gt;&gt;</span> p <span class="o">=</span> Post.new<span class="o">(</span>title: <span class="s2">"My Post"</span>, body: <span class="s2">"This is exciting!"</span><span class="o">)</span>
+<span class="o">&gt;&gt;</span> p <span class="o">=</span> new_record?
+<span class="nb">true</span>
+<span class="o">&gt;&gt;</span> p.save
+<span class="o">&gt;&gt;</span> p.new_record?
+<span class="nb">false</span>
+<span class="o">&gt;&gt;</span> Post.count
+4</code></pre></figure>
+
+<h2 id="our-blogs-homepage-a-list-of-posts">Our blog’s homepage: a list of posts</h2>
+
+<p>Now that our backend is set up, let’s hook it up to our website. When somebody visits our blog’s root url /, they should see a list of our blog posts in the order in which they were created at.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="o">...</span>
+<span class="n">get</span> <span class="s2">"/"</span> <span class="k">do</span>
+  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">order</span><span class="p">(</span><span class="s2">"created_at DESC"</span><span class="p">)</span>
+  <span class="n">erb</span> <span class="ss">:"posts/index"</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>@instance_variables are passed into the view layer. We assign them here.
+erb declares which template to render.
+Our post index template</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/posts/index.erb
+<span class="nt">&lt;h1&gt;</span>Welcome to my blog!<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;ul&gt;</span>
+<span class="cp">&lt;%</span> <span class="vi">@posts</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span> <span class="cp">%&gt;</span>
+  <span class="nt">&lt;li&gt;</span>
+    <span class="nt">&lt;h2&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/</span><span class="cp">&lt;%=</span> <span class="n">post</span><span class="p">.</span><span class="nf">id</span> <span class="cp">%&gt;</span><span class="s">"</span><span class="nt">&gt;</span><span class="cp">&lt;%=</span> <span class="n">post</span><span class="p">.</span><span class="nf">title</span> <span class="cp">%&gt;</span><span class="nt">&lt;/a&gt;</span>
+    <span class="nt">&lt;span&gt;</span><span class="cp">&lt;%=</span> <span class="n">pretty_date</span><span class="p">(</span><span class="n">post</span><span class="p">.</span><span class="nf">created_at</span><span class="p">)</span> <span class="cp">%&gt;</span><span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/h2&gt;</span>
+  <span class="nt">&lt;/li&gt;</span>
+<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/ul&gt;</span></code></pre></figure>
+
+<h2 id="our-layout">Our layout</h2>
+
+<p>Templates are embedded inside of layouts, and layouts give us a place to put the code that’s common between every template so that our templates can just concern themselves with what’s changed.</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/layout.erb
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span><span class="cp">&lt;%=</span> <span class="n">title</span> <span class="cp">%&gt;</span><span class="nt">&lt;/title&gt;</span>
+  <span class="cp">&lt;%</span> <span class="nb">puts</span> <span class="n">request</span><span class="p">.</span><span class="nf">inspect</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;ul&gt;</span>
+    <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/"</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+    <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/about"</span><span class="nt">&gt;</span>About Me<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+  <span class="nt">&lt;/ul&gt;</span>
+  <span class="cp">&lt;%=</span> <span class="k">yield</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span></code></pre></figure>
+
+<p>The yield method is where templates are embedded.</p>
+
+<p>Some helpers</p>
+
+<p>You’re notice two methods in the about two files:</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"><span class="cp">&lt;%=</span> <span class="n">title</span> <span class="cp">%&gt;</span>
+<span class="cp">&lt;%=</span> <span class="n">pretty_date</span><span class="p">(</span><span class="n">post</span><span class="p">.</span><span class="nf">created_at</span><span class="p">)</span> <span class="cp">%&gt;</span></code></pre></figure>
+
+<p>These are defined in a helpers block in our app.rb which are available to any route and view. They let us extract code and simplify our view files.</p>
+
+<p>Here’s what they look like:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="o">...</span>
+<span class="n">helpers</span> <span class="k">do</span>
+  <span class="c1"># If @title is assigned, add it to the page's title.</span>
+  <span class="k">def</span> <span class="nf">title</span>
+    <span class="k">if</span> <span class="vi">@title</span>
+      <span class="s2">"</span><span class="si">#{</span><span class="vi">@title</span><span class="si">}</span><span class="s2"> -- My Blog"</span>
+    <span class="k">else</span>
+      <span class="s2">"My Blog"</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Format the Ruby Time object returned from a post's created_at method</span>
+  <span class="c1"># into a string that looks like this: 06 Jan 2012</span>
+  <span class="k">def</span> <span class="nf">pretty_date</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+   <span class="n">time</span><span class="p">.</span><span class="nf">strftime</span><span class="p">(</span><span class="s2">"%d %b %Y"</span><span class="p">)</span>
+  <span class="k">end</span>
+
+<span class="k">end</span> </code></pre></figure>
+
+<p>…
+The rest of our routes</p>
+
+<p>Without getting too deep in describing each one, here are all of our routes at once.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="o">...</span>
+
+<span class="c1"># Get all of our routes</span>
+<span class="n">get</span> <span class="s2">"/"</span> <span class="k">do</span>
+  <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">order</span><span class="p">(</span><span class="s2">"created_at DESC"</span><span class="p">)</span>
+  <span class="n">erb</span> <span class="ss">:"posts/index"</span>
+<span class="k">end</span>
+
+<span class="c1"># Get the New Post form</span>
+<span class="n">get</span> <span class="s2">"/posts/new"</span> <span class="k">do</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"New Post"</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span>
+  <span class="n">erb</span> <span class="ss">:"posts/new"</span>
+<span class="k">end</span>
+
+<span class="c1"># The New Post form sends a POST request (storing data) here</span>
+<span class="c1"># where we try to create the post it sent in its params hash.</span>
+<span class="c1"># If successful, redirect to that post. Otherwise, render the "posts/new"</span>
+<span class="c1"># template where the @post object will have the incomplete data that the </span>
+<span class="c1"># user can modify and resubmit.</span>
+<span class="n">post</span> <span class="s2">"/posts"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+  <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>
+    <span class="n">redirect</span> <span class="s2">"posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">else</span>
+    <span class="n">erb</span> <span class="ss">:"posts/new"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># Get the individual page of the post with this ID.</span>
+<span class="n">get</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span>
+  <span class="n">erb</span> <span class="ss">:"posts/show"</span>
+<span class="k">end</span>
+
+<span class="c1"># Get the Edit Post form of the post with this ID.</span>
+<span class="n">get</span> <span class="s2">"/posts/:id/edit"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"Edit Form"</span>
+  <span class="n">erb</span> <span class="ss">:"posts/edit"</span>
+<span class="k">end</span>
+
+<span class="c1"># The Edit Post form sends a PUT request (modifying data) here.</span>
+<span class="c1"># If the post is updated successfully, redirect to it. Otherwise,</span>
+<span class="c1"># render the edit form again with the failed @post object still in memory</span>
+<span class="c1"># so they can retry.</span>
+<span class="n">put</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">])</span>
+  <span class="k">if</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">update_attributes</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:post</span><span class="p">])</span>
+    <span class="n">redirect</span> <span class="s2">"/posts/</span><span class="si">#{</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">else</span>
+    <span class="n">erb</span> <span class="ss">:"posts/edit"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># Deletes the post with this ID and redirects to homepage.</span>
+<span class="n">delete</span> <span class="s2">"/posts/:id"</span> <span class="k">do</span>
+  <span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="ss">:id</span><span class="p">]).</span><span class="nf">destroy</span>
+  <span class="n">redirect</span> <span class="s2">"/"</span>
+<span class="k">end</span>
+
+<span class="c1"># Our About Me page.</span>
+<span class="n">get</span> <span class="s2">"/about"</span> <span class="k">do</span>
+  <span class="vi">@title</span> <span class="o">=</span> <span class="s2">"About Me"</span>
+  <span class="n">erb</span> <span class="ss">:"pages/about"</span>
+<span class="k">end</span></code></pre></figure>
+
+<h2 id="all-of-our-templates">All of our templates</h2>
+
+<p>And here are the templates they render:</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/posts/new.erb
+<span class="nt">&lt;h1&gt;</span>New Post<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_title"</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;&lt;br</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"post_title"</span> <span class="na">name=</span><span class="s">"post[title]"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">value=</span><span class="s">"</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_body"</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;&lt;br</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"post_body"</span> <span class="na">name=</span><span class="s">"post[body]"</span> <span class="na">rows=</span><span class="s">"5"</span><span class="nt">&gt;</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">body</span> <span class="cp">%&gt;</span><span class="nt">&lt;/textarea&gt;</span>
+  <span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Create Post"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/form&gt;</span>   </code></pre></figure>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/posts/show.erb
+<span class="nt">&lt;h1&gt;</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span> <span class="cp">%&gt;</span><span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">body</span> <span class="cp">%&gt;</span><span class="nt">&lt;/p&gt;</span></code></pre></figure>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/posts/edit.erb
+<span class="nt">&lt;h1&gt;</span>Edit Post<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts/</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">id</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"hidden"</span> <span class="na">name=</span><span class="s">"_method"</span> <span class="na">value=</span><span class="s">"put"</span> <span class="nt">/&gt;</span> 
+
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_title"</span><span class="nt">&gt;</span>Title:<span class="nt">&lt;/label&gt;&lt;br</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">id=</span><span class="s">"post_title"</span> <span class="na">name=</span><span class="s">"post[title]"</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">value=</span><span class="s">"</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">title</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+
+  <span class="nt">&lt;label</span> <span class="na">for=</span><span class="s">"post_body"</span><span class="nt">&gt;</span>Body:<span class="nt">&lt;/label&gt;&lt;br</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"post_body"</span> <span class="na">name=</span><span class="s">"post[body]"</span> <span class="na">rows=</span><span class="s">"5"</span><span class="nt">&gt;</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">body</span> <span class="cp">%&gt;</span><span class="nt">&lt;/textarea&gt;</span>
+  <span class="nt">&lt;br</span> <span class="nt">/&gt;</span>
+
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Edit Post"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/form&gt;</span> </code></pre></figure>
+
+<p>Note: I explained in the routes above that our Edit Post form sends a PUT request, but we use unfortunately the HTML spec only accepts “GET” or “POST” in a <code>&lt;form&gt;</code>’s method attribute. So we instead let Sinatra know that we want this to be a PUT request by specifying it in a hidden form input called _method with a value of put. You also do the same thing in Ruby on Rails and other frameworks.</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/pages/about.erb
+<span class="nt">&lt;h1&gt;</span>About Me<span class="nt">&lt;/h1&gt;</span>
+<span class="nt">&lt;p&gt;</span>My name is Dan.<span class="nt">&lt;/p&gt;</span></code></pre></figure>
+
+<h2 id="a-navigation-bar-that-lets-us-addeditdelete-posts">A navigation bar that lets us add/edit/delete posts</h2>
+
+<p>We want a list of links following us around to each page, so we’ll put it in our layout. So far, our layout already has a convenient link back to our homepage, but we also want links to our About Me page, the New Post form, the Edit Post form of the current post, and a Delete Post button for the current post.</p>
+
+<p>Here’s our completed layout with those links added:</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/layout.erb
+<span class="nt">&lt;html&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span><span class="cp">&lt;%=</span> <span class="n">title</span> <span class="cp">%&gt;</span><span class="nt">&lt;/title&gt;</span>
+<span class="nt">&lt;/head&gt;</span>
+<span class="nt">&lt;body&gt;</span>
+  <span class="nt">&lt;ul&gt;</span>
+    <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/"</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+    <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/about"</span><span class="nt">&gt;</span>About Me<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>             
+    <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/new"</span><span class="nt">&gt;</span>New Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>                             
+    <span class="cp">&lt;%</span> <span class="k">if</span> <span class="n">post_show_page?</span>  <span class="cp">%&gt;</span>
+      <span class="nt">&lt;li&gt;&lt;a</span> <span class="na">href=</span><span class="s">"/posts/</span><span class="cp">&lt;%=</span> <span class="vi">@post</span><span class="p">.</span><span class="nf">id</span> <span class="cp">%&gt;</span><span class="s">/edit"</span><span class="nt">&gt;</span>Edit Post<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+      <span class="nt">&lt;li&gt;</span><span class="cp">&lt;%=</span> <span class="n">delete_post_button</span><span class="p">(</span><span class="vi">@post</span><span class="p">.</span><span class="nf">id</span><span class="p">)</span> <span class="cp">%&gt;</span><span class="nt">&lt;/li&gt;</span>
+    <span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+  <span class="nt">&lt;/ul&gt;</span>
+  <span class="cp">&lt;%=</span> <span class="k">yield</span> <span class="cp">%&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span></code></pre></figure>
+
+<p>Note that we only want to see “Edit Post” and “Delete Post” if we’re viewing a post, so I created a post_show_page? helper method that checks the current URL:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="n">helpers</span> <span class="k">do</span>
+<span class="o">...</span>
+  <span class="k">def</span> <span class="nf">post_show_page?</span>
+    <span class="n">request</span><span class="p">.</span><span class="nf">path_info</span> <span class="o">=~</span> <span class="sr">/\/posts\/\d+$/</span>
+  <span class="k">end</span>
+<span class="o">...</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>It only gets evaluated to true in that if-statement if the current path is <code>/posts/{number}</code>, like <code>/posts/6</code>.</p>
+
+<p>I’ll explain the delete button next.</p>
+
+<h2 id="how-to-make-a-delete-button">How to make a delete button</h2>
+
+<p>You’ll also notice that I’m using another helper called delete_post_button and you pass in the ID of a post.</p>
+
+<p>Basically, we need a link that can send a DELETE request to our delete “posts/:id” route. However, an <code>&lt;a&gt;</code> tag can only send a GET request. Much like on our Edit Post form, we have to use that <code>&lt;form&gt;</code> method override trickery to make our DELETE button.</p>
+
+<p>In other words, we have to make a small <code>&lt;form&gt;</code>. I didn’t want to bloat up the view with that markup, so I wrote a helper.</p>
+
+<p>Here’s what that helper looks like:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="o">...</span>
+<span class="n">helpers</span> <span class="k">do</span>
+  <span class="o">...</span>
+  <span class="k">def</span> <span class="nf">delete_post_button</span><span class="p">(</span><span class="n">post_id</span><span class="p">)</span>
+    <span class="n">erb</span> <span class="ss">:_delete_post_button</span><span class="p">,</span> <span class="ss">locals: </span><span class="p">{</span> <span class="ss">post_id: </span><span class="n">post_id</span><span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>All it does is render a partial template located at views/<em>delete_post_button.erb. The underscore (</em>) is a convention I took from Ruby on Rails to distinguish partial templates (templates I want to embed in other templates) from regular templates.</p>
+
+<p>The locals has is used to pass the post id from view view into the final erb partial. We could leave off the locals hash complete and <code>make _delete_post_button.erb</code> except that @post.id will exist, but that’s not very robust and a meek little partial shouldn’t be bothered to know that.</p>
+
+<figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/_delete_post_button.erb
+<span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts/</span><span class="cp">&lt;%=</span> <span class="n">post_id</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"hidden"</span> <span class="na">name=</span><span class="s">"_method"</span> <span class="na">value=</span><span class="s">"delete"</span> <span class="nt">/&gt;</span> 
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Delete Post"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/form&gt;</span></code></pre></figure>
+
+<h2 id="adding-some-validations">Adding some validations</h2>
+
+<p>We have some checks in our routes to see if the post is successfully created/updated, but we don’t have a way for a post to fail when trying to save it to the database.</p>
+
+<p>Let’s ensure that a post must:</p>
+
+<p>Have a body
+Have a title that’s &gt; 3 characters long
+Pop it into our model:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app.rb</span>
+<span class="o">...</span>
+<span class="k">class</span> <span class="nc">Post</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+  <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span><span class="p">,</span> <span class="ss">length: </span><span class="p">{</span> <span class="ss">minimum: </span><span class="mi">3</span> <span class="p">}</span>
+  <span class="n">validates</span> <span class="ss">:body</span><span class="p">,</span> <span class="ss">presence: </span><span class="kp">true</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Verify in the tux console:</p>
+
+<figure class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nv">$ </span>tux
+<span class="o">&gt;&gt;</span> p <span class="o">=</span> Post.new
+<span class="o">&gt;&gt;</span> p.valid?
+<span class="nb">false</span>
+<span class="o">&gt;&gt;</span> p.errors.messages 
+<span class="o">{</span>:title<span class="o">=&gt;[</span><span class="s2">"can't be blank"</span>, <span class="s2">"is too short (minimum is 3 characters)"</span><span class="o">]</span>, :body<span class="o">=&gt;[</span><span class="s2">"can't be blank"</span><span class="o">]}</span>
+<span class="o">&gt;&gt;</span> p.save
+<span class="nb">false</span>
+<span class="o">&gt;&gt;</span> p.title <span class="o">=</span> <span class="s2">"I have a title now!"</span>
+<span class="o">&gt;&gt;</span> p.body <span class="o">=</span> <span class="s2">"And I also have a body! Thanks!"</span>
+<span class="o">&gt;&gt;</span> p.valid?
+<span class="nb">true</span></code></pre></figure>
+
+<p>Verify on our New Post and Edit Post forms. If you try to save a post with incomplete data, it should drop you back on the form with your data still filled out.</p>
+
+<h2 id="thats-it">That’s it!</h2>
+
+:ET

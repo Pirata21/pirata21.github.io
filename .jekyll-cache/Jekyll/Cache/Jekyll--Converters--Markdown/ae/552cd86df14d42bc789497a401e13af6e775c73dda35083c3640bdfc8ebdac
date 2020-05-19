@@ -1,0 +1,156 @@
+I"�<h1 id="example-react-app-into-salesforce">Example React App into Salesforce</h1>
+
+<p>This is an starter kit to work with react and redux into salesforce.</p>
+
+<p>We will be using two JavaScript libraries in this demo:</p>
+
+<p>React and Redux.</p>
+
+<p><a href="https://github.com/Pirata21/salesforce-react-demo">https://github.com/Pirata21/salesforce-react-demo</a></p>
+
+<h2 id="building-solution">Building solution:</h2>
+<ul>
+  <li>Clone this repo</li>
+  <li>cd into react-way</li>
+  <li>run <code>webpack</code> command, which will produce <code>bundle.js</code> and <code>bundle.js.map</code></li>
+  <li>Zip these two files and add as a Static Resource in Salesforce
+    <ul>
+      <li>Alternatively you can do <code>npm run deploySR</code></li>
+      <li>This will run 7Zip the two files descibred before and run a custom node app that will deploy the Zip file
+to Salesforce. The code for this is in <code>deploySF.js</code>. This has been
+tested on a Windows 8.1 64-bit machine with all the proper environment
+variables set</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="what-is-react">What is React:</h2>
+<ul>
+  <li>The “V” in MVC</li>
+  <li>React abstracts away the DOM from you, giving a simpler programming model and
+better performance.</li>
+  <li>Creates the view based on your Data</li>
+  <li>Official <a href="https://facebook.github.io/react/">documentation</a></li>
+</ul>
+
+<h2 id="what-is-redux">What is Redux:</h2>
+<ul>
+  <li>Awesome! Great work done by @gaearon. Checkout the official <a href="http://redux.js.org/">documentation</a></li>
+  <li>A predictable state container for JavaScript apps (similar to Flux, Alt, etc.)
+Simple Overview</li>
+  <li>The whole state of your app is stored in an object tree inside a single store.</li>
+  <li>The only way to change the state tree is to emit an action, an object
+describing what happened.</li>
+  <li>To specify how the actions transform the state tree, you write pure reducers.</li>
+</ul>
+
+<h2 id="parts-of-redux">Parts of Redux:</h2>
+<h3 id="actions">Actions</h3>
+<p>Actions are payloads of information that send data from your application to your
+store. They are the only source of information for the store</p>
+<pre><code class="language-javascript">{
+  type: ACTION_TYPE,
+  ... Additional Data
+}
+</code></pre>
+
+<h3 id="reducers">Reducers</h3>
+<p>Actions describe the fact that something happened, but don’t specify how the
+application’s state changes in response. This is the job of a reducer.</p>
+<pre><code class="language-javascript">function myReducer(state, action) {
+  switch (action.type) {
+    case MY_ACTION:
+      return Object.assign({}, state, {
+        key: value
+      })
+    default:
+      return state
+    }
+}
+</code></pre>
+
+<h3 id="store">Store</h3>
+<ul>
+  <li>Actions represent the facts about “what happened” and Reducers update the
+state according to those actions.</li>
+  <li>The Store is the object that brings them together. The store has the following
+responsibilities:
+    <ul>
+      <li>Holds application state;</li>
+      <li>Allows access to state via getState();</li>
+      <li>Allows state to be updated via dispatch(action);</li>
+      <li>Registers listeners via subscribe(listener).</li>
+    </ul>
+  </li>
+</ul>
+
+<pre><code class="language-javascript">import { createStore } from 'redux'
+import myReducer from './reducers'
+let store = createStore(myReducer)
+</code></pre>
+
+<h2 id="getting-started">Getting Started</h2>
+
+<h4 id="dependencies">Dependencies</h4>
+
+<ul>
+  <li>Node</li>
+  <li>NPM</li>
+</ul>
+
+<p>Tool to create the zip</p>
+
+<p><code>brew install p7zip</code></p>
+
+<h4 id="install">Install</h4>
+<p>Install package’s dependencies</p>
+
+<p><code>npm install</code></p>
+
+<h4 id="run-the-app">Run the app</h4>
+
+<p><code>npm start</code></p>
+
+<h4 id="usage">Usage</h4>
+<p>Create Visualforce page pointing to: <em>localHost:8080/bundle.js</em></p>
+
+<p>Example</p>
+
+<pre><code class="language-html">  &lt;apex:page applyBodyTag="false"  docType="html-5.0"&gt;
+      &lt;html&gt;
+      &lt;head&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1"/&gt;
+      &lt;/head&gt;
+        &lt;body&gt;
+          &lt;div id="container"&gt;
+          &lt;/div&gt;
+        &lt;/body&gt;
+        &lt;script type="text/javascript"&gt;
+        &lt;/script&gt;
+        &lt;script charset="utf-8" src="https://localhost:8080/bundle.js" type="text/javascript"&gt;&lt;/script&gt;
+      &lt;/html&gt;
+    &lt;/apex:page&gt;
+</code></pre>
+
+<h4 id="deploy">Deploy</h4>
+<p>The following script generate and upload the zip to salesforce</p>
+
+<p><code>npm deploySR</code></p>
+
+<p>Replace the script tag on the page pointing to the static resource. Example:</p>
+
+<pre><code class="language-html">
+  &lt;script charset="utf-8" src="{!URLFOR($Resource.mystaticresource,'bundle.js')}" type="text/javascript"&gt;&lt;/script&gt;
+
+</code></pre>
+
+<h3 id="deploy-configuration">Deploy Configuration</h3>
+
+<p>Edit salesforce.config.js file:</p>
+
+<pre><code>username: '',
+password: '',
+zipName:'',
+zipDescription: ''
+</code></pre>
+:ET

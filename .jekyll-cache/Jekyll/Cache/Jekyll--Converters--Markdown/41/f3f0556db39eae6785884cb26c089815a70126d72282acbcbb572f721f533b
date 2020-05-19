@@ -1,0 +1,199 @@
+I"\H<p>Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)</p>
+
+<h3 id="the-sitemap-protocol">The Sitemap Protocol</h3>
+
+<p><a href="http://www.sitemaps.org/protocol.html">sitemaps.org/protocol.html</a></p>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml">    <span class="cp">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+    <span class="nt">&lt;urlset</span> <span class="na">xmlns=</span><span class="s">"http://www.sitemaps.org/schemas/sitemap/0.9"</span><span class="nt">&gt;</span>
+       <span class="nt">&lt;url&gt;</span>
+          <span class="nt">&lt;loc&gt;</span>http://www.example.com/<span class="nt">&lt;/loc&gt;</span>  required
+          <span class="nt">&lt;lastmod&gt;</span>2005-01-01<span class="nt">&lt;/lastmod&gt;</span>       optional
+          <span class="nt">&lt;changefreq&gt;</span>monthly<span class="nt">&lt;/changefreq&gt;</span>    optional
+          <span class="nt">&lt;priority&gt;</span>0.8<span class="nt">&lt;/priority&gt;</span>            optional
+       <span class="nt">&lt;/url&gt;</span>
+       <span class="nt">&lt;url&gt;</span>
+         ...loop through your URLs...
+       <span class="nt">&lt;/url&gt;</span>
+    <span class="nt">&lt;/urlset&gt;</span> </code></pre></figure>
+
+<h3 id="building-the-sitemap">Building the sitemap</h3>
+
+<h4 id="1-the-route">1. The route</h4>
+
+<p>The conventional location for a simple sitemap seems to be <code>domain.com/sitemap.xml</code>. I default <code>params[:format]</code> to “xml” and map the route to the index action of sitemaps_controller.rb.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># config/routes.rb</span>
+    <span class="no">Grinch</span><span class="o">::</span><span class="no">Application</span><span class="p">.</span><span class="nf">routes</span><span class="p">.</span><span class="nf">draw</span> <span class="k">do</span>
+      <span class="n">get</span> <span class="s2">"sitemap.xml"</span> <span class="o">=&gt;</span> <span class="s2">"sitemaps#index"</span><span class="p">,</span> <span class="ss">as: </span><span class="s2">"sitemap"</span><span class="p">,</span> <span class="ss">defaults: </span><span class="p">{</span> <span class="ss">format: </span><span class="s2">"xml"</span> <span class="p">}</span>
+      <span class="o">...</span>
+    <span class="k">end</span></code></pre></figure>
+
+<h4 id="2-the-controller--caching-the-sitemap">2. The controller (+ caching the sitemap)</h4>
+
+<p>If you’re unfamiliar with Rails caching, check out: <a href="http://guides.rubyonrails.org/caching_with_rails.html">Rails Guides: Caching with Rails</a></p>
+
+<p>Note: Rails doesn’t cache by default in development mode. If you want to test page caching locally, you’ll need to enable it:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># config/environments/development.rb</span>
+    <span class="n">config</span><span class="p">.</span><span class="nf">action_controller</span><span class="p">.</span><span class="nf">perform_caching</span> <span class="o">=</span> <span class="kp">true</span></code></pre></figure>
+
+<p>But here’s a quick crash course:</p>
+
+<p>Page caching means the full response is written to a static file in <code>public/</code>. Future requests won’t even hit Rails because, generally, servers are configured to look in <code>public/</code> before passing the request to Rails. This is why you have to remove <code>public/index.html</code> in a new Rails app before you can see your root action.</p>
+
+<p><code>caches_page :index</code> will tell Rails to write to a <code>sitemap.xml</code> if it doesn’t exist. The route tells Rails where to write it hierarchically in the <code>public</code> directory:</p>
+
+<ul>
+  <li><code>get "sitemap.xml"</code> –&gt; <code>public/sitemap.xml</code></li>
+  <li><code>get "sitemaps/sitemap.xml"</code> –&gt; <code>public/sitemaps/sitemap.xml</code></li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/controllers/sitemaps_controller.rb</span>
+    <span class="k">class</span> <span class="nc">SitemapsController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+      <span class="n">caches_page</span> <span class="ss">:index</span>
+      <span class="k">def</span> <span class="nf">index</span>
+        <span class="vi">@static_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">about_me_path</span><span class="p">,</span> <span class="n">projects_path</span><span class="p">]</span>
+        <span class="vi">@posts</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">all</span>
+        <span class="n">respond_to</span> <span class="k">do</span> <span class="o">|</span><span class="nb">format</span><span class="o">|</span>
+          <span class="nb">format</span><span class="p">.</span><span class="nf">xml</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span></code></pre></figure>
+
+<p>Like any other controller action, it’ll send those @vars to an expected <code>views/sitemaps/index.xml</code></p>
+
+<h4 id="3-the-builder">3. The builder</h4>
+
+<p><code>Builder</code> ships with Rails. It’s akin to any other compilers/templaters you may be used to like <code>.css.scss</code> and <code>.html.erb</code>.</p>
+
+<p>Builder initializes an <code>xml</code> object that you can just add on to.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/views/sitemaps/index.xml.builder</span>
+    <span class="n">xml</span><span class="p">.</span><span class="nf">urlset</span><span class="p">(</span><span class="ss">xmlns: </span><span class="s2">"http://www.sitemaps.org/schemas/sitemap/0.9"</span><span class="p">)</span> <span class="k">do</span>
+      <span class="vi">@static_paths</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">path</span><span class="o">|</span>
+        <span class="n">xml</span><span class="p">.</span><span class="nf">url</span> <span class="k">do</span>
+          <span class="n">xml</span><span class="p">.</span><span class="nf">loc</span> <span class="s2">"</span><span class="si">#{</span><span class="no">GRINCH</span><span class="p">[</span><span class="s1">'root_url'</span><span class="p">]</span><span class="si">}#{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>
+          <span class="n">xml</span><span class="p">.</span><span class="nf">changefreq</span><span class="p">(</span><span class="s2">"monthly"</span><span class="p">)</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+      <span class="vi">@posts</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span>
+        <span class="n">xml</span><span class="p">.</span><span class="nf">url</span> <span class="k">do</span>
+          <span class="n">xml</span><span class="p">.</span><span class="nf">loc</span> <span class="s2">"</span><span class="si">#{</span><span class="no">GRINCH</span><span class="p">[</span><span class="s1">'root_url'</span><span class="p">]</span><span class="si">}#{</span><span class="n">url_for</span><span class="p">(</span><span class="n">post</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+          <span class="n">xml</span><span class="p">.</span><span class="nf">lastmod</span> <span class="n">post</span><span class="p">.</span><span class="nf">updated_at</span><span class="p">.</span><span class="nf">strftime</span><span class="p">(</span><span class="s2">"%F"</span><span class="p">)</span>
+          <span class="n">xml</span><span class="p">.</span><span class="nf">changefreq</span><span class="p">(</span><span class="s2">"monthly"</span><span class="p">)</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span></code></pre></figure>
+
+<h4 id="4-expiring-the-cache-when-posts-are-createddestroyed">4. Expiring the cache when posts are created/destroyed.</h4>
+
+<p>Rails needs to be told when to expire (delete) a cached page. We can do that with a <a href="http://api.rubyonrails.org/classes/ActionController/Caching/Sweeping.html">Sweeper</a>.</p>
+
+<blockquote>
+  <p>Sweepers are the terminators of the caching world and responsible for expiring caches when model objects change. They do this by being half-observers, half-filters and implementing callbacks for both roles.</p>
+</blockquote>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/sweepers/sitemap_sweeper.rb</span>
+    <span class="k">class</span> <span class="nc">SitemapSweeper</span> <span class="o">&lt;</span> <span class="no">ActionController</span><span class="o">::</span><span class="no">Caching</span><span class="o">::</span><span class="no">Sweeper</span>
+      <span class="n">observe</span> <span class="ss">:post</span>
+
+      <span class="k">def</span> <span class="nf">sweep</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+        <span class="n">expire_page</span><span class="p">(</span><span class="n">sitemap_path</span><span class="p">)</span>
+      <span class="k">end</span>
+
+      <span class="kp">alias_method</span> <span class="ss">:after_create</span><span class="p">,</span> <span class="ss">:sweep</span>
+      <span class="kp">alias_method</span> <span class="ss">:after_destroy</span><span class="p">,</span> <span class="ss">:sweep</span>
+    <span class="k">end</span></code></pre></figure>
+
+<p><code>expire_page()</code> is the opposite of the <code>caches_page()</code> we used in the controller. Any time a Post is created/destroyed, Rails will delete the file specified in our sitemap_path route. A fresh sitemap.xml will be cached on the next request.</p>
+
+<p>For an app with a large sitemap, you’d want to start rebuilding it immediately so a search engine doesn’t have to wait. Please, think of the crawlers.</p>
+
+<h4 id="simples">Simples</h4>
+
+<p>Great.Now a fresh sitemap.xml is located at domain.com/sitemap.xml even as we create and destroy posts.</p>
+
+<p>But now let’s tell search engines about it when an updated sitemap is available.</p>
+
+<h3 id="pinging-search-engines">Pinging search engines</h3>
+
+<h4 id="1-the-pinger">1. The pinger</h4>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/models/sitemap_pinger.rb</span>
+    <span class="k">class</span> <span class="nc">SitemapPinger</span> 
+      <span class="no">SEARCH_ENGINES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="ss">google: </span><span class="s2">"http://www.google.com/webmasters/tools/ping?sitemap=%s"</span><span class="p">,</span>
+        <span class="ss">ask: </span><span class="s2">"http://submissions.ask.com/ping?sitemap=%s"</span><span class="p">,</span>
+        <span class="ss">bing: </span><span class="s2">"http://www.bing.com/webmaster/ping.aspx?siteMap=%s"</span>
+      <span class="p">}</span>
+
+      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">ping</span>
+        <span class="no">SitemapLogger</span><span class="p">.</span><span class="nf">info</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span>
+        <span class="no">SEARCH_ENGINES</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">url</span><span class="o">|</span>
+          <span class="n">request</span> <span class="o">=</span> <span class="n">url</span> <span class="o">%</span> <span class="no">CGI</span><span class="p">.</span><span class="nf">escape</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="no">GRINCH</span><span class="p">[</span><span class="s1">'root_url'</span><span class="p">]</span><span class="si">}</span><span class="s2">/sitemap.xml"</span><span class="p">)</span>  
+          <span class="no">SitemapLogger</span><span class="p">.</span><span class="nf">info</span> <span class="s2">"  Pinging </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2"> with </span><span class="si">#{</span><span class="n">request</span><span class="si">}</span><span class="s2">"</span>
+          <span class="k">if</span> <span class="no">Rails</span><span class="p">.</span><span class="nf">env</span> <span class="o">==</span> <span class="s2">"production"</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="no">Net</span><span class="o">::</span><span class="no">HTTP</span><span class="p">.</span><span class="nf">get_response</span><span class="p">(</span><span class="no">URI</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+            <span class="no">SitemapLogger</span><span class="p">.</span><span class="nf">info</span> <span class="s2">"    </span><span class="si">#{</span><span class="n">response</span><span class="p">.</span><span class="nf">code</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">response</span><span class="p">.</span><span class="nf">message</span><span class="si">}</span><span class="s2">"</span>
+            <span class="no">SitemapLogger</span><span class="p">.</span><span class="nf">info</span> <span class="s2">"    Body: </span><span class="si">#{</span><span class="n">response</span><span class="p">.</span><span class="nf">body</span><span class="si">}</span><span class="s2">"</span>
+          <span class="k">end</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span></code></pre></figure>
+
+<p>You might want to round off your search engine list with the big boys like AltaVista, HotBot, and Lycos, but I wasn’t about to get cocky.</p>
+
+<h4 id="2-the-logger">2. The logger</h4>
+
+<p>To ensure my pinger even does anything, I log the responses to <code>logs/sitemap.log</code>. I also don’t want to ping the search engines during development/testing any time I mess with Posts, so I tell it to only ping in production.</p>
+
+<p>To set up a new logger, create an initializer.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="n">log_path</span> <span class="o">=</span> <span class="no">File</span><span class="p">.</span><span class="nf">join</span><span class="p">(</span><span class="no">Rails</span><span class="p">.</span><span class="nf">root</span><span class="p">,</span> <span class="s1">'log/sitemap.log'</span><span class="p">)</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="no">File</span><span class="p">.</span><span class="nf">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">)</span>
+    <span class="n">log_file</span><span class="p">.</span><span class="nf">sync</span> <span class="o">=</span> <span class="kp">true</span>
+    <span class="no">SitemapLogger</span> <span class="o">=</span> <span class="no">Logger</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span></code></pre></figure>
+
+<h4 id="3-triggering-the-ping">3. Triggering the ping</h4>
+
+<p>We have our pinging mechanism set up, but now we need to actually invoke the pinger when we have some fresh intel for our search engine friends.</p>
+
+<p>I use an <a href="http://api.rubyonrails.org/classes/ActiveRecord/Observer.html">Observer</a>.</p>
+
+<blockquote>
+  <p>Observer classes respond to life cycle callbacks to implement trigger-like behavior outside the original class. This is a great way to reduce the clutter that normally comes when the model class is burdened with functionality that doesn’t pertain to the core responsibility of the class.</p>
+</blockquote>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># app/observers/sitemap_observer.rb</span>
+<span class="k">class</span> <span class="nc">SitemapObserver</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Observer</span>
+  <span class="n">observe</span> <span class="ss">:post</span>
+
+  <span class="k">def</span> <span class="nf">ping</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+    <span class="no">SitemapPinger</span><span class="p">.</span><span class="nf">ping</span>
+  <span class="k">end</span>
+
+  <span class="kp">alias_method</span> <span class="ss">:after_create</span><span class="p">,</span> <span class="ss">:ping</span>
+  <span class="kp">alias_method</span> <span class="ss">:after_destroy</span><span class="p">,</span> <span class="ss">:ping</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>However, unlike sweepers, we must register our observer before it will be invoked.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">  <span class="c1"># config/application.rb</span>
+  <span class="n">config</span><span class="p">.</span><span class="nf">active_record</span><span class="p">.</span><span class="nf">observers</span> <span class="o">=</span> <span class="ss">:sitemap_observer</span></code></pre></figure>
+
+<h4 id="boom">Boom</h4>
+
+<p>There we have it. Our observer will call our SitemapPinger.ping whenever posts are created/destroyed (and our sitemap.xml is destroyed).</p>
+
+<p>To verify it all works in development:</p>
+
+<ul>
+  <li>Remove the <code>if Rails.env == "production"</code> condition in the SitemapPinger</li>
+  <li>Ensure <code>config.action_controller.perform_caching = true</code></li>
+  <li>Create/destroy a few posts</li>
+  <li>Check <code>log/sitemap.log</code> for updates</li>
+  <li>Ensure <code>rooturl.com/sitemap.xml</code> works</li>
+</ul>
+
+:ET

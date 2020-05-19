@@ -1,0 +1,14 @@
+I"‘<ul class="post-list">
+ 
+  <li><article><a href="http://blog.spartan-code.com//articles/lwc-get-picklist-values/">Get Picklist Values using LWC   <span class="entry-date"><time datetime="2020-05-01T18:14:00-03:00">May 01, 2020</time></span> <span class="excerpt">Get Picklist Values using LWC</span></a></article></li>
+ 
+  <li><article><a href="http://blog.spartan-code.com//articles/test/">Example React App into Salesforce <span class="entry-date"><time datetime="2016-07-19T18:14:00-03:00">July 19, 2016</time></span> <span class="excerpt">This is an starter kit to work with react and redux into salesforce.</span></a></article></li>
+ 
+  <li><article><a href="http://blog.spartan-code.com//articles/setting-mocha-test-coffescript-node-cakefile/">Setting up Mocha testing with Coffeescript, Node.js, and a Cakefile <span class="entry-date"><time datetime="2015-05-16T00:00:00-03:00">May 16, 2015</time></span> <span class="excerpt">I'm still in a Javascript (well, Coffeescript) kick. In an attempt to be productive while I train with great discipline, I decided to port Paul Dix's </span></a></article></li>
+ 
+  <li><article><a href="http://blog.spartan-code.com//articles/generating-a-sitemap-with-rails/">Generating and submitting a sitemap.xml with Rails <span class="entry-date"><time datetime="2015-05-13T00:00:00-03:00">May 13, 2015</time></span> <span class="excerpt">Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)</span></a></article></li>
+ 
+  <li><article><a href="http://blog.spartan-code.com//articles/simple-blog-sinatra-active-record/">A Simple Blog with Sinatra and Active Record ( + some useful tools) <span class="entry-date"><time datetime="2015-01-02T00:00:00-02:00">January 02, 2015</time></span> <span class="excerpt">Sinatra is often suggested to newbies as an easy framework, but I imagine its lack of post-readme documentation makes it pretty daunting once you get past &quot;Hello World&quot;. Doing something like hooking up a database is non-obvious, and writing glue code just isn&#39;t newbie friendly.</span></a></article></li>
+
+</ul>
+:ET

@@ -1,0 +1,38 @@
+I"l<h1 id="get-picklist-values-using-lwc">Get Picklist Values using LWC</h1>
+
+<p>We must to use a wire adapter to get the picklist values for a specified field. To use <code>getPicklistValues</code> we should pass the recordTypeId, if our object doesn’t has any record type created, we should set the master Record Type(<code>'012000000000000AAA'</code>)</p>
+
+<h2 id="js">JS</h2>
+<pre><code class="language-javascript">
+import { LightningElement, wire, track } from 'lwc';
+import { getPicklistValues } from 'lightning/uiObjectInfoApi'; 
+import PIRATE_FIELD from '@salesforce/schema/OpportunityLineItem.Pirate__c'; 
+
+export default class Pirate extends LightningElement {
+    masterRecordType = '012000000000000AAA';
+
+    // GET OBJECT INFO
+    @wire(
+        getPicklistValues, 
+        { recordTypeId: '$masterRecordType', fieldApiName: PIRATE_FIELD }
+    )
+    picklistValues;
+}
+</code></pre>
+
+<h2 id="html">HTML</h2>
+<pre><code class="language-html">
+&lt;template&gt;
+    &lt;lightning-card title="Pirate PicklistValues"&gt;
+        &lt;template if:true={picklistValues.data}&gt;
+           &lt;template for:each={TypePicklistValues.data.values} for:item="item"&gt;
+              &lt;span key={item.value}&gt;
+                {item.label}
+              &lt;/span&gt;
+            &lt;/template&gt;
+          &lt;/template&gt;
+    &lt;/lightning-card&gt;
+&lt;/template&gt;
+</code></pre>
+
+:ET
