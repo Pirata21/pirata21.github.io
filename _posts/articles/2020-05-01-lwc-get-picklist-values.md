@@ -17,6 +17,7 @@ image:
 
 We must to use a wire adapter to get the picklist values for a specified field. To use `getPicklistValues` we should pass the recordTypeId, if our object doesn't has any record type created, we should set the master Record Type(`'012000000000000AAA'`)
 
+
 ## JS
 ```javascript
 
