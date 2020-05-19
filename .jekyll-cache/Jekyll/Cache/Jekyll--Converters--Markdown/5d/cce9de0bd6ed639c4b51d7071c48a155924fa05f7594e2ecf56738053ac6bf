@@ -1,38 +1,38 @@
-I"l<h1 id="get-picklist-values-using-lwc">Get Picklist Values using LWC</h1>
+I"<<h1 id="get-picklist-values-using-lwc">Get Picklist Values using LWC</h1>
 
-<p>We must to use a wire adapter to get the picklist values for a specified field. To use <code>getPicklistValues</code> we should pass the recordTypeId, if our object doesn’t has any record type created, we should set the master Record Type(<code>'012000000000000AAA'</code>)</p>
+<p>We must to use a wire adapter to get the picklist values for a specified field. To use <code class="highlighter-rouge">getPicklistValues</code> we should pass the recordTypeId, if our object doesn’t has any record type created, we should set the master Record Type(<code class="highlighter-rouge">'012000000000000AAA'</code>)</p>
 
 <h2 id="js">JS</h2>
-<pre><code class="language-javascript">
-import { LightningElement, wire, track } from 'lwc';
-import { getPicklistValues } from 'lightning/uiObjectInfoApi'; 
-import PIRATE_FIELD from '@salesforce/schema/OpportunityLineItem.Pirate__c'; 
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">LightningElement</span><span class="p">,</span> <span class="nx">wire</span><span class="p">,</span> <span class="nx">track</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">lwc</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">getPicklistValues</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">lightning/uiObjectInfoApi</span><span class="dl">'</span><span class="p">;</span> 
+<span class="k">import</span> <span class="nx">PIRATE_FIELD</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@salesforce/schema/OpportunityLineItem.Pirate__c</span><span class="dl">'</span><span class="p">;</span> 
 
-export default class Pirate extends LightningElement {
-    masterRecordType = '012000000000000AAA';
+<span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">Pirate</span> <span class="kd">extends</span> <span class="nx">LightningElement</span> <span class="p">{</span>
+    <span class="nx">masterRecordType</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">012000000000000AAA</span><span class="dl">'</span><span class="p">;</span>
 
-    // GET OBJECT INFO
-    @wire(
-        getPicklistValues, 
-        { recordTypeId: '$masterRecordType', fieldApiName: PIRATE_FIELD }
-    )
-    picklistValues;
-}
-</code></pre>
+    <span class="c1">// GET OBJECT INFO</span>
+    <span class="p">@</span><span class="nd">wire</span><span class="p">(</span>
+        <span class="nx">getPicklistValues</span><span class="p">,</span> 
+        <span class="p">{</span> <span class="na">recordTypeId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">$masterRecordType</span><span class="dl">'</span><span class="p">,</span> <span class="na">fieldApiName</span><span class="p">:</span> <span class="nx">PIRATE_FIELD</span> <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="nx">picklistValues</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h2 id="html">HTML</h2>
-<pre><code class="language-html">
-&lt;template&gt;
-    &lt;lightning-card title="Pirate PicklistValues"&gt;
-        &lt;template if:true={picklistValues.data}&gt;
-           &lt;template for:each={TypePicklistValues.data.values} for:item="item"&gt;
-              &lt;span key={item.value}&gt;
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="nt">&lt;template&gt;</span>
+    <span class="nt">&lt;lightning-card</span> <span class="na">title=</span><span class="s">"Pirate PicklistValues"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;template</span> <span class="na">if:true=</span><span class="s">{picklistValues.data}</span><span class="nt">&gt;</span>
+           <span class="nt">&lt;template</span> <span class="na">for:each=</span><span class="s">{TypePicklistValues.data.values}</span> <span class="na">for:item=</span><span class="s">"item"</span><span class="nt">&gt;</span>
+              <span class="nt">&lt;span</span> <span class="na">key=</span><span class="s">{item.value}</span><span class="nt">&gt;</span>
                 {item.label}
-              &lt;/span&gt;
-            &lt;/template&gt;
-          &lt;/template&gt;
-    &lt;/lightning-card&gt;
-&lt;/template&gt;
-</code></pre>
+              <span class="nt">&lt;/span&gt;</span>
+            <span class="nt">&lt;/template&gt;</span>
+          <span class="nt">&lt;/template&gt;</span>
+    <span class="nt">&lt;/lightning-card&gt;</span>
+<span class="nt">&lt;/template&gt;</span>
+</code></pre></div></div>
 
 :ET

@@ -1,4 +1,4 @@
-I"©<h1 id="example-react-app-into-salesforce">Example React App into Salesforce</h1>
+I"š <h1 id="example-react-app-into-salesforce">Example React App into Salesforce</h1>
 
 <p>This is an starter kit to work with react and redux into salesforce.</p>
 
@@ -12,12 +12,12 @@
 <ul>
   <li>Clone this repo</li>
   <li>cd into react-way</li>
-  <li>run <code>webpack</code> command, which will produce <code>bundle.js</code> and <code>bundle.js.map</code></li>
+  <li>run <code class="highlighter-rouge">webpack</code> command, which will produce <code class="highlighter-rouge">bundle.js</code> and <code class="highlighter-rouge">bundle.js.map</code></li>
   <li>Zip these two files and add as a Static Resource in Salesforce
     <ul>
-      <li>Alternatively you can do <code>npm run deploySR</code></li>
+      <li>Alternatively you can do <code class="highlighter-rouge">npm run deploySR</code></li>
       <li>This will run 7Zip the two files descibred before and run a custom node app that will deploy the Zip file
-to Salesforce. The code for this is in <code>deploySF.js</code>. This has been
+to Salesforce. The code for this is in <code class="highlighter-rouge">deploySF.js</code>. This has been
 tested on a Windows 8.1 64-bit machine with all the proper environment
 variables set</li>
     </ul>
@@ -48,26 +48,26 @@ describing what happened.</li>
 <h3 id="actions">Actions</h3>
 <p>Actions are payloads of information that send data from your application to your
 store. They are the only source of information for the store</p>
-<pre><code class="language-javascript">{
-  type: ACTION_TYPE,
-  ... Additional Data
-}
-</code></pre>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">type</span><span class="p">:</span> <span class="nx">ACTION_TYPE</span><span class="p">,</span>
+  <span class="p">...</span> <span class="nx">Additional</span> <span class="nx">Data</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h3 id="reducers">Reducers</h3>
 <p>Actions describe the fact that something happened, but donâ€™t specify how the
 applicationâ€™s state changes in response. This is the job of a reducer.</p>
-<pre><code class="language-javascript">function myReducer(state, action) {
-  switch (action.type) {
-    case MY_ACTION:
-      return Object.assign({}, state, {
-        key: value
-      })
-    default:
-      return state
-    }
-}
-</code></pre>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nx">myReducer</span><span class="p">(</span><span class="nx">state</span><span class="p">,</span> <span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="nx">MY_ACTION</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="nx">state</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">key</span><span class="p">:</span> <span class="nx">value</span>
+      <span class="p">})</span>
+    <span class="k">default</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nx">state</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
 <h3 id="store">Store</h3>
 <ul>
@@ -84,10 +84,10 @@ responsibilities:
   </li>
 </ul>
 
-<pre><code class="language-javascript">import { createStore } from 'redux'
-import myReducer from './reducers'
-let store = createStore(myReducer)
-</code></pre>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">createStore</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">redux</span><span class="dl">'</span>
+<span class="k">import</span> <span class="nx">myReducer</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./reducers</span><span class="dl">'</span>
+<span class="kd">let</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">createStore</span><span class="p">(</span><span class="nx">myReducer</span><span class="p">)</span>
+</code></pre></div></div>
 
 <h2 id="getting-started">Getting Started</h2>
 
@@ -100,57 +100,57 @@ let store = createStore(myReducer)
 
 <p>Tool to create the zip</p>
 
-<p><code>brew install p7zip</code></p>
+<p><code class="highlighter-rouge">brew install p7zip</code></p>
 
 <h4 id="install">Install</h4>
 <p>Install packageâ€™s dependencies</p>
 
-<p><code>npm install</code></p>
+<p><code class="highlighter-rouge">npm install</code></p>
 
 <h4 id="run-the-app">Run the app</h4>
 
-<p><code>npm start</code></p>
+<p><code class="highlighter-rouge">npm start</code></p>
 
 <h4 id="usage">Usage</h4>
 <p>Create Visualforce page pointing to: <em>localHost:8080/bundle.js</em></p>
 
 <p>Example</p>
 
-<pre><code class="language-html">  &lt;apex:page applyBodyTag="false"  docType="html-5.0"&gt;
-      &lt;html&gt;
-      &lt;head&gt;
-        &lt;meta name="viewport" content="width=device-width, initial-scale=1"/&gt;
-      &lt;/head&gt;
-        &lt;body&gt;
-          &lt;div id="container"&gt;
-          &lt;/div&gt;
-        &lt;/body&gt;
-        &lt;script type="text/javascript"&gt;
-        &lt;/script&gt;
-        &lt;script charset="utf-8" src="https://localhost:8080/bundle.js" type="text/javascript"&gt;&lt;/script&gt;
-      &lt;/html&gt;
-    &lt;/apex:page&gt;
-</code></pre>
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nt">&lt;apex:page</span> <span class="na">applyBodyTag=</span><span class="s">"false"</span>  <span class="na">docType=</span><span class="s">"html-5.0"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;html&gt;</span>
+      <span class="nt">&lt;head&gt;</span>
+        <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"viewport"</span> <span class="na">content=</span><span class="s">"width=device-width, initial-scale=1"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;/head&gt;</span>
+        <span class="nt">&lt;body&gt;</span>
+          <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"container"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/body&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;/script&gt;</span>
+        <span class="nt">&lt;script </span><span class="na">charset=</span><span class="s">"utf-8"</span> <span class="na">src=</span><span class="s">"https://localhost:8080/bundle.js"</span> <span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;&lt;/script&gt;</span>
+      <span class="nt">&lt;/html&gt;</span>
+    <span class="nt">&lt;/apex:page&gt;</span>
+</code></pre></div></div>
 
 <h4 id="deploy">Deploy</h4>
 <p>The following script generate and upload the zip to salesforce</p>
 
-<p><code>npm deploySR</code></p>
+<p><code class="highlighter-rouge">npm deploySR</code></p>
 
 <p>Replace the script tag on the page pointing to the static resource. Example:</p>
 
-<pre><code class="language-html">
-  &lt;script charset="utf-8" src="{!URLFOR($Resource.mystaticresource,'bundle.js')}" type="text/javascript"&gt;&lt;/script&gt;
+<div class="language-html highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+  <span class="nt">&lt;script </span><span class="na">charset=</span><span class="s">"utf-8"</span> <span class="na">src=</span><span class="s">"{!URLFOR($Resource.mystaticresource,'bundle.js')}"</span> <span class="na">type=</span><span class="s">"text/javascript"</span><span class="nt">&gt;&lt;/script&gt;</span>
 
-</code></pre>
+</code></pre></div></div>
 
 <h3 id="deploy-configuration">Deploy Configuration</h3>
 
 <p>Edit salesforce.config.js file:</p>
 
-<pre><code>username: '',
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>username: '',
 password: '',
 zipName:'',
 zipDescription: ''
-</code></pre>
+</code></pre></div></div>
 :ET

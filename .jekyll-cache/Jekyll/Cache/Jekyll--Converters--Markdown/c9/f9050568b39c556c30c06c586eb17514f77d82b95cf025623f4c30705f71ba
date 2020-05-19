@@ -1,4 +1,4 @@
-I"��<h2 id="objective">Objective</h2>
+I"��<h2 id="objective">Objective</h2>
 
 <p>Sinatra is often suggested to newbies as an easy framework, but I imagine its lack of post-readme documentation makes it pretty daunting once you get past "Hello World". Doing something like hooking up a database is non-obvious, and writing glue code just isn't newbie friendly.</p>
 
@@ -27,7 +27,7 @@
 
 <p>Some of these files/directories will be automatically generated.</p>
 
-<pre><code>+-- blog
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+-- blog
 	+-- Gemfile                       # Lists our gem dependencies
 	+-- Rakefile                      # Contains helpful tasks we can run from command line
 	+-- config.ru                     # A conventional file used for deploying and integrating with some tools
@@ -43,7 +43,7 @@
 			+-- show.erb
 			+-- new.erb
 			+-- edit.erb
-</code></pre>
+</code></pre></div></div>
 
 <h2 id="the-gems-well-use">The gems we’ll use</h2>
 
@@ -379,7 +379,7 @@ The rest of our routes</p>
   <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"submit"</span> <span class="na">value=</span><span class="s">"Edit Post"</span> <span class="nt">/&gt;</span>
 <span class="nt">&lt;/form&gt;</span> </code></pre></figure>
 
-<p>Note: I explained in the routes above that our Edit Post form sends a PUT request, but we use unfortunately the HTML spec only accepts “GET” or “POST” in a <code>&lt;form&gt;</code>’s method attribute. So we instead let Sinatra know that we want this to be a PUT request by specifying it in a hidden form input called _method with a value of put. You also do the same thing in Ruby on Rails and other frameworks.</p>
+<p>Note: I explained in the routes above that our Edit Post form sends a PUT request, but we use unfortunately the HTML spec only accepts “GET” or “POST” in a <code class="highlighter-rouge">&lt;form&gt;</code>’s method attribute. So we instead let Sinatra know that we want this to be a PUT request by specifying it in a hidden form input called _method with a value of put. You also do the same thing in Ruby on Rails and other frameworks.</p>
 
 <figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/pages/about.erb
 <span class="nt">&lt;h1&gt;</span>About Me<span class="nt">&lt;/h1&gt;</span>
@@ -421,7 +421,7 @@ The rest of our routes</p>
 <span class="o">...</span>
 <span class="k">end</span></code></pre></figure>
 
-<p>It only gets evaluated to true in that if-statement if the current path is <code>/posts/{number}</code>, like <code>/posts/6</code>.</p>
+<p>It only gets evaluated to true in that if-statement if the current path is <code class="highlighter-rouge">/posts/{number}</code>, like <code class="highlighter-rouge">/posts/6</code>.</p>
 
 <p>I’ll explain the delete button next.</p>
 
@@ -429,9 +429,9 @@ The rest of our routes</p>
 
 <p>You’ll also notice that I’m using another helper called delete_post_button and you pass in the ID of a post.</p>
 
-<p>Basically, we need a link that can send a DELETE request to our delete “posts/:id” route. However, an <code>&lt;a&gt;</code> tag can only send a GET request. Much like on our Edit Post form, we have to use that <code>&lt;form&gt;</code> method override trickery to make our DELETE button.</p>
+<p>Basically, we need a link that can send a DELETE request to our delete “posts/:id” route. However, an <code class="highlighter-rouge">&lt;a&gt;</code> tag can only send a GET request. Much like on our Edit Post form, we have to use that <code class="highlighter-rouge">&lt;form&gt;</code> method override trickery to make our DELETE button.</p>
 
-<p>In other words, we have to make a small <code>&lt;form&gt;</code>. I didn’t want to bloat up the view with that markup, so I wrote a helper.</p>
+<p>In other words, we have to make a small <code class="highlighter-rouge">&lt;form&gt;</code>. I didn’t want to bloat up the view with that markup, so I wrote a helper.</p>
 
 <p>Here’s what that helper looks like:</p>
 
@@ -446,7 +446,7 @@ The rest of our routes</p>
 
 <p>All it does is render a partial template located at views/<em>delete_post_button.erb. The underscore (</em>) is a convention I took from Ruby on Rails to distinguish partial templates (templates I want to embed in other templates) from regular templates.</p>
 
-<p>The locals has is used to pass the post id from view view into the final erb partial. We could leave off the locals hash complete and <code>make _delete_post_button.erb</code> except that @post.id will exist, but that’s not very robust and a meek little partial shouldn’t be bothered to know that.</p>
+<p>The locals has is used to pass the post id from view view into the final erb partial. We could leave off the locals hash complete and <code class="highlighter-rouge">make _delete_post_button.erb</code> except that @post.id will exist, but that’s not very robust and a meek little partial shouldn’t be bothered to know that.</p>
 
 <figure class="highlight"><pre><code class="language-erb" data-lang="erb"># views/_delete_post_button.erb
 <span class="nt">&lt;form</span> <span class="na">action=</span><span class="s">"/posts/</span><span class="cp">&lt;%=</span> <span class="n">post_id</span> <span class="cp">%&gt;</span><span class="s">"</span> <span class="na">method=</span><span class="s">"post"</span><span class="nt">&gt;</span>

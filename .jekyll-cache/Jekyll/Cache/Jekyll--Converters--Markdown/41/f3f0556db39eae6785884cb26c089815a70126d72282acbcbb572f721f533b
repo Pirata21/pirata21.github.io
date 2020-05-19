@@ -1,4 +1,4 @@
-I"\H<p>Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)</p>
+I"�J<p>Some tools I use include page caching, a sweeper, an observer, a custom logger, and an xml builder. (My expensive SEO consultant says I gotta get that keyword density up.)</p>
 
 <h3 id="the-sitemap-protocol">The Sitemap Protocol</h3>
 
@@ -21,7 +21,7 @@
 
 <h4 id="1-the-route">1. The route</h4>
 
-<p>The conventional location for a simple sitemap seems to be <code>domain.com/sitemap.xml</code>. I default <code>params[:format]</code> to “xml” and map the route to the index action of sitemaps_controller.rb.</p>
+<p>The conventional location for a simple sitemap seems to be <code class="highlighter-rouge">domain.com/sitemap.xml</code>. I default <code class="highlighter-rouge">params[:format]</code> to “xml” and map the route to the index action of sitemaps_controller.rb.</p>
 
 <figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># config/routes.rb</span>
     <span class="no">Grinch</span><span class="o">::</span><span class="no">Application</span><span class="p">.</span><span class="nf">routes</span><span class="p">.</span><span class="nf">draw</span> <span class="k">do</span>
@@ -40,13 +40,13 @@
 
 <p>But here’s a quick crash course:</p>
 
-<p>Page caching means the full response is written to a static file in <code>public/</code>. Future requests won’t even hit Rails because, generally, servers are configured to look in <code>public/</code> before passing the request to Rails. This is why you have to remove <code>public/index.html</code> in a new Rails app before you can see your root action.</p>
+<p>Page caching means the full response is written to a static file in <code class="highlighter-rouge">public/</code>. Future requests won’t even hit Rails because, generally, servers are configured to look in <code class="highlighter-rouge">public/</code> before passing the request to Rails. This is why you have to remove <code class="highlighter-rouge">public/index.html</code> in a new Rails app before you can see your root action.</p>
 
-<p><code>caches_page :index</code> will tell Rails to write to a <code>sitemap.xml</code> if it doesn’t exist. The route tells Rails where to write it hierarchically in the <code>public</code> directory:</p>
+<p><code class="highlighter-rouge">caches_page :index</code> will tell Rails to write to a <code class="highlighter-rouge">sitemap.xml</code> if it doesn’t exist. The route tells Rails where to write it hierarchically in the <code class="highlighter-rouge">public</code> directory:</p>
 
 <ul>
-  <li><code>get "sitemap.xml"</code> –&gt; <code>public/sitemap.xml</code></li>
-  <li><code>get "sitemaps/sitemap.xml"</code> –&gt; <code>public/sitemaps/sitemap.xml</code></li>
+  <li><code class="highlighter-rouge">get "sitemap.xml"</code> –&gt; <code class="highlighter-rouge">public/sitemap.xml</code></li>
+  <li><code class="highlighter-rouge">get "sitemaps/sitemap.xml"</code> –&gt; <code class="highlighter-rouge">public/sitemaps/sitemap.xml</code></li>
 </ul>
 
 <figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/controllers/sitemaps_controller.rb</span>
@@ -61,13 +61,13 @@
       <span class="k">end</span>
     <span class="k">end</span></code></pre></figure>
 
-<p>Like any other controller action, it’ll send those @vars to an expected <code>views/sitemaps/index.xml</code></p>
+<p>Like any other controller action, it’ll send those @vars to an expected <code class="highlighter-rouge">views/sitemaps/index.xml</code></p>
 
 <h4 id="3-the-builder">3. The builder</h4>
 
-<p><code>Builder</code> ships with Rails. It’s akin to any other compilers/templaters you may be used to like <code>.css.scss</code> and <code>.html.erb</code>.</p>
+<p><code class="highlighter-rouge">Builder</code> ships with Rails. It’s akin to any other compilers/templaters you may be used to like <code class="highlighter-rouge">.css.scss</code> and <code class="highlighter-rouge">.html.erb</code>.</p>
 
-<p>Builder initializes an <code>xml</code> object that you can just add on to.</p>
+<p>Builder initializes an <code class="highlighter-rouge">xml</code> object that you can just add on to.</p>
 
 <figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="c1"># app/views/sitemaps/index.xml.builder</span>
     <span class="n">xml</span><span class="p">.</span><span class="nf">urlset</span><span class="p">(</span><span class="ss">xmlns: </span><span class="s2">"http://www.sitemaps.org/schemas/sitemap/0.9"</span><span class="p">)</span> <span class="k">do</span>
@@ -106,7 +106,7 @@
       <span class="kp">alias_method</span> <span class="ss">:after_destroy</span><span class="p">,</span> <span class="ss">:sweep</span>
     <span class="k">end</span></code></pre></figure>
 
-<p><code>expire_page()</code> is the opposite of the <code>caches_page()</code> we used in the controller. Any time a Post is created/destroyed, Rails will delete the file specified in our sitemap_path route. A fresh sitemap.xml will be cached on the next request.</p>
+<p><code class="highlighter-rouge">expire_page()</code> is the opposite of the <code class="highlighter-rouge">caches_page()</code> we used in the controller. Any time a Post is created/destroyed, Rails will delete the file specified in our sitemap_path route. A fresh sitemap.xml will be cached on the next request.</p>
 
 <p>For an app with a large sitemap, you’d want to start rebuilding it immediately so a search engine doesn’t have to wait. Please, think of the crawlers.</p>
 
@@ -146,7 +146,7 @@
 
 <h4 id="2-the-logger">2. The logger</h4>
 
-<p>To ensure my pinger even does anything, I log the responses to <code>logs/sitemap.log</code>. I also don’t want to ping the search engines during development/testing any time I mess with Posts, so I tell it to only ping in production.</p>
+<p>To ensure my pinger even does anything, I log the responses to <code class="highlighter-rouge">logs/sitemap.log</code>. I also don’t want to ping the search engines during development/testing any time I mess with Posts, so I tell it to only ping in production.</p>
 
 <p>To set up a new logger, create an initializer.</p>
 
@@ -189,11 +189,11 @@
 <p>To verify it all works in development:</p>
 
 <ul>
-  <li>Remove the <code>if Rails.env == "production"</code> condition in the SitemapPinger</li>
-  <li>Ensure <code>config.action_controller.perform_caching = true</code></li>
+  <li>Remove the <code class="highlighter-rouge">if Rails.env == "production"</code> condition in the SitemapPinger</li>
+  <li>Ensure <code class="highlighter-rouge">config.action_controller.perform_caching = true</code></li>
   <li>Create/destroy a few posts</li>
-  <li>Check <code>log/sitemap.log</code> for updates</li>
-  <li>Ensure <code>rooturl.com/sitemap.xml</code> works</li>
+  <li>Check <code class="highlighter-rouge">log/sitemap.log</code> for updates</li>
+  <li>Ensure <code class="highlighter-rouge">rooturl.com/sitemap.xml</code> works</li>
 </ul>
 
 :ET
